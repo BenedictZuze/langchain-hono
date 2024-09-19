@@ -1,0 +1,10 @@
+name = "langchain-hono"
+compatibility_date = "2024-09-18"
+compatibility_flags = [ "nodejs_compat" ]
+
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "langchain-practice"
+
+[ai]
+binding = "AI"

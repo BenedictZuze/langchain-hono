@@ -1,0 +1,19 @@
+{
+  "name": "langchain-hono",
+  "scripts": {
+    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy --minify src/index.ts"
+  },
+  "dependencies": {
+    "@langchain/cloudflare": "^0.1.0",
+    "@langchain/community": "^0.3.1",
+    "@langchain/core": "^0.3.2",
+    "@langchain/textsplitters": "^0.1.0",
+    "cheerio": "^1.0.0",
+    "hono": "^4.6.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240529.0",
+    "wrangler": "^3.57.2"
+  }
+}
