@@ -16,15 +16,7 @@ import { Context, Hono } from "hono";
 
 const app = new Hono();
 
-app.get("/", async (c: Context) => {
-  const loader = new CheerioWebBaseLoader(
-    "https://docs.qgis.org/3.34/en/docs/user_manual/working_with_projections/working_with_projections.html"
-  );
-  const doc = await loader.load();
-  const splitter = new RecursiveCharacterTextSplitter();
-  const docs = await splitter.splitDocuments(doc);
-  docs.forEach((doc) => delete doc.metadata.loc);
-
+app.get("/chat", async (c: Context) => {
   const embeddings = new CloudflareWorkersAIEmbeddings({
     binding: c.env.AI,
     model: "@cf/baai/bge-small-en-v1.5",
@@ -32,8 +24,6 @@ app.get("/", async (c: Context) => {
   const store = new CloudflareVectorizeStore(embeddings, {
     index: c.env.VECTORIZE,
   });
-  // await store.addDocuments(docs);
-
   const retriever = store.asRetriever(4);
 
   const model = new ChatCloudflareWorkersAI({
@@ -70,6 +60,37 @@ app.get("/", async (c: Context) => {
   const answer = await chain.invoke(question);
 
   return c.text(answer);
+});
+
+app.get("/", async (c: Context) => {
+  try {
+    const { searchParams } = new URL(c.req.url);
+    const url =
+      searchParams.get("url") ??
+      "https://docs.qgis.org/3.34/en/docs/user_manual/working_with_projections/working_with_projections.html";
+    const loader = new CheerioWebBaseLoader(url);
+
+    const doc = await loader.load();
+    const splitter = new RecursiveCharacterTextSplitter();
+    const docs = await splitter.splitDocuments(doc);
+    docs.forEach((doc) => delete doc.metadata.loc);
+
+    const embeddings = new CloudflareWorkersAIEmbeddings({
+      binding: c.env.AI,
+      model: "@cf/baai/bge-small-en-v1.5",
+    });
+
+    const store = new CloudflareVectorizeStore(embeddings, {
+      index: c.env.VECTORIZE,
+    });
+
+    await store.addDocuments(docs);
+
+    return c.text("Done");
+  } catch (err: any) {
+    console.error(err.message);
+    return c.text("Error index URL");
+  }
 });
 
 export default app;
